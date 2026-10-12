@@ -5,7 +5,7 @@ import { randomBytes, createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { matches, reportAuthorized, createReportSession, clearReportSession } from "@/lib/report-auth";
+import { matches, reportAuthorized, reportPassword, createReportSession, clearReportSession } from "@/lib/report-auth";
 import { parseInvitationInput, isUuid, type InvitationInput } from "@/lib/invitation-input";
 
 const maxFailures = 5;
@@ -13,7 +13,7 @@ const failure = () => new Promise(resolve => setTimeout(resolve, 1000));
 
 export async function login(form: FormData) {
   const password = form.get("password");
-  const expected = process.env.WEDDING_REPORT_PASSWORD;
+  const expected = reportPassword();
   if (!expected) redirect("/organizacion?error=1");
   // Hosting platforms set these headers; only a hash of the address is stored.
   const requestHeaders = await headers();
@@ -25,7 +25,7 @@ export async function login(form: FormData) {
     const [{ failures }] = await sql`SELECT count(*)::int AS failures FROM report_login_failures
       WHERE client_hash=${client} AND attempted_at > now() - interval '15 minutes'`;
     if (failures >= maxFailures) outcome = "limited";
-    else if (typeof password === "string" && matches(password, expected)) {
+    else if (typeof password === "string" && matches(password.trim(), expected)) {
       await sql`DELETE FROM report_login_failures WHERE client_hash=${client} OR attempted_at < now() - interval '1 day'`;
       outcome = "ok";
     } else {

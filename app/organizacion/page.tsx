@@ -5,7 +5,7 @@ import { weddingConfig as w, coupleNames } from "@/config/weddingConfig";
 import type { Metadata } from "next";
 import { weddingDatabaseUrl, databaseConfigured } from "@/lib/database.mjs";
 import { neon } from "@neondatabase/serverless";
-import { reportAuthorized } from "@/lib/report-auth";
+import { reportAuthorized, reportPassword } from "@/lib/report-auth";
 import { monogram } from "@/lib/moderna";
 import { login } from "./actions";
 import type { GuestRow } from "@/lib/guest-rows";
@@ -26,7 +26,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
       <div>
         <p className="mo-login-mono">{monogram.a}&amp;{monogram.b}</p>
         <h1 className="mo-kicker" style={{ marginTop: 18, color: "var(--stone)" }}>Espacio de los novios</h1>
-        {configured && process.env.WEDDING_REPORT_PASSWORD
+        {configured && reportPassword()
           ? <form action={login}>
               <input className="mo-login-input" type="password" name="password" required autoComplete="current-password" placeholder="Contraseña" aria-label="Contraseña" />
               {error && <p role="alert" className="mo-login-error">{loginErrors[error] ?? loginErrors["1"]}</p>}
