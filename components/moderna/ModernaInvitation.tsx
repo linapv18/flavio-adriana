@@ -21,6 +21,22 @@ const FAQ = [
 // The story's main photo and its thumbnails, without repeats, for the full-screen viewer.
 const STORY_PHOTOS = [...new Set([w.photos.story, ...w.photos.storyThumbs])];
 const realUrl = (url: string) => !!url && url !== "#";
+// A one-seat invitation speaks to the guest as "tú"; larger ones as "ustedes".
+const wording = (singular: boolean) => singular ? {
+  celebrate: "celebrarlo contigo", join: "¿Nos acompañas?", miss: "Te extrañaremos.",
+  answered: "Recibimos tu respuesta. Puedes cambiarla en cualquier momento antes de", confirm: "Confirma antes de",
+  travel: "Si vienes", travelText: "Todo lo que necesitas para llegar, descansar y conocer la ciudad durante esos días.",
+  who: "¿Nos acompañas?", note: "Déjanos unas palabras…", missing: "Indica si podrás asistir.",
+  thanksYes: () => "Nos encantará celebrar contigo. Tu asistencia está confirmada.",
+  thanksNo: "Gracias por hacérnoslo saber. Te tendremos presente en este día tan especial.",
+} : {
+  celebrate: "celebrarlo con ustedes", join: "¿Nos acompañan?", miss: "Los extrañaremos.",
+  answered: "Recibimos su respuesta. Pueden cambiarla en cualquier momento antes de", confirm: "Confirmen por persona antes de",
+  travel: "Si vienen", travelText: "Todo lo que necesitan para llegar, descansar y conocer la ciudad durante esos días.",
+  who: "¿Quién nos acompaña?", note: "Déjennos unas palabras…", missing: "Indica si cada persona de la invitación podrá asistir.",
+  thanksYes: (n: number) => `Nos encantará celebrar con ustedes. Confirmamos ${n} ${n === 1 ? "asistente" : "asistentes"}.`,
+  thanksNo: "Gracias por hacérnoslo saber. Los tendremos presentes en este día tan especial.",
+};
 // Chapters can be taller than the screen (Viaje, Preguntas), so positions come from the sections themselves.
 const sectionTop = (scroller: HTMLElement | null, i: number) => (scroller?.children[i] as HTMLElement | undefined)?.offsetTop ?? 0;
 const chapterPhotos = w.photos.chapters as Record<ChapterId, string>;
@@ -82,6 +98,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
   const yes = response?.attending ? response.partySize : 0;
   const answered = response !== null;
   const seats = invitation?.seats ?? 0;
+  const t = wording(seats === 1);
   const labels = invitation ? seatLabels(invitation.name, seats, invitation.guestNames) : [];
   const answers = seatAnswers(seats, response);
 
@@ -125,7 +142,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
             <div className="mo-cover-copy">
               <p className="mo-kicker">{longDate}</p>
               <h1>{w.couple.bride}<br /><em>&amp; {w.couple.groom}</em></h1>
-              <p className="mo-cover-intro">{invitation ? `Nos vamos a casar y queremos celebrarlo con ustedes, ${invitation.name}.` : "Nos vamos a casar y queremos celebrarlo contigo."}</p>
+              <p className="mo-cover-intro">{invitation ? `Nos vamos a casar y queremos ${t.celebrate}, ${invitation.name}.` : "Nos vamos a casar y queremos celebrarlo contigo."}</p>
               <button type="button" className="mo-discover" onClick={() => goChapter(1)}><span aria-hidden="true">↓</span> Descubrir</button>
             </div>
           </section>
@@ -173,8 +190,8 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
 
           <section className="mo-ch is-sand" aria-label="Confirmación">
             <p className="mo-kicker">Confirmación</p>
-            <h2 className="mo-display" style={{ marginTop: 18 }}>{!invitation || !answered ? "¿Nos acompañan?" : yes ? "Nos vemos pronto." : "Les extrañaremos."}</h2>
-            <p className="mo-text" style={{ marginTop: 18, maxWidth: 380 }}>{!invitation ? "Abre el enlace personal que te enviamos para confirmar tu asistencia y ver los cupos reservados." : answered ? `Recibimos su respuesta. Pueden cambiarla en cualquier momento antes de ${w.date.rsvpDeadline}.` : `${seats === 1 ? "Tienes 1 cupo reservado" : `Tienen ${seats} cupos reservados`}. Confirmen por persona antes de ${w.date.rsvpDeadline}.`}</p>
+            <h2 className="mo-display" style={{ marginTop: 18 }}>{!invitation || !answered ? t.join : yes ? "Nos vemos pronto." : t.miss}</h2>
+            <p className="mo-text" style={{ marginTop: 18, maxWidth: 380 }}>{!invitation ? "Abre el enlace personal que te enviamos para confirmar tu asistencia y ver los cupos reservados." : answered ? `${t.answered} ${w.date.rsvpDeadline}.` : `${seats === 1 ? "Tienes 1 cupo reservado" : `Tienen ${seats} cupos reservados`}. ${t.confirm} ${w.date.rsvpDeadline}.`}</p>
             <div style={{ marginTop: "auto" }}>
               {labels.map((name, i) => <div key={i} className="mo-person"><span>{name}</span><span className="mo-status"><span className={`mo-dot ${answers[i] ? "is-yes" : ""}`} />{answers[i] === null ? "Pendiente" : answers[i] ? "Asiste" : "No asiste"}</span></div>)}
               {invitation
@@ -208,8 +225,8 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
 
           {hasTravel && <section className="mo-ch is-tall" aria-label="Viaje">
             <p className="mo-kicker">Viaje</p>
-            <h2 className="mo-display" style={{ marginTop: 18 }}>Si vienen <em>de viaje</em></h2>
-            <p className="mo-text" style={{ marginTop: 18, maxWidth: 460 }}>Todo lo que necesitan para llegar, descansar y conocer la ciudad durante esos días.</p>
+            <h2 className="mo-display" style={{ marginTop: 18 }}>{t.travel} <em>de viaje</em></h2>
+            <p className="mo-text" style={{ marginTop: 18, maxWidth: 460 }}>{t.travelText}</p>
 
             {w.hotel.enabled && <div style={{ marginTop: 40 }}>
               <p className="mo-label" style={{ color: "var(--muted)", marginBottom: 6 }}>{w.hotel.title}</p>
@@ -293,11 +310,12 @@ function RsvpSheet({ invitation, token, preview, labels, response, onSaved, onCl
   const close = useRef<HTMLButtonElement>(null);
   useEffect(() => { close.current?.focus(); }, []);
   const yes = draft.filter(Boolean).length;
+  const t = wording(invitation.seats === 1);
   const set = (i: number, v: boolean) => { setDraft(d => d.map((a, j) => j === i ? v : a)); setError(""); };
 
   async function submit() {
     if (pending) return;
-    if (draft.some(a => a === null)) { setError("Indica si cada persona de la invitación podrá asistir."); return; }
+    if (draft.some(a => a === null)) { setError(t.missing); return; }
     setPending(true); setError("");
     try {
       if (preview) await new Promise(resolve => setTimeout(resolve, 600));
@@ -321,7 +339,7 @@ function RsvpSheet({ invitation, token, preview, labels, response, onSaved, onCl
       <div className="mo-sheet-head"><span className="mo-kicker" style={{ color: "var(--muted)" }}>Confirmación</span><button ref={close} type="button" className="mo-close" onClick={onClose} aria-label="Cerrar">×</button></div>
       {!editing && response ? <div className="mo-thanks">
         <p id="mo-rsvp-title">Gracias.</p>
-        <p className="mo-text" style={{ marginTop: 22, fontSize: 15 }}>{savedYes ? `Nos encantará celebrar con ustedes. Confirmamos ${savedYes} ${savedYes === 1 ? "asistente" : "asistentes"}.` : "Gracias por hacérnoslo saber. Les tendremos presentes en este día tan especial."}</p>
+        <p className="mo-text" style={{ marginTop: 22, fontSize: 15 }}>{savedYes ? t.thanksYes(savedYes) : t.thanksNo}</p>
         <div style={{ marginTop: 28 }}>{labels.map((name, i) => <div key={i} className="mo-person" style={{ padding: "12px 0" }}><span style={{ fontSize: 20 }}>{name}</span><span className="mo-status">{saved[i] ? "Asiste" : "No asiste"}</span></div>)}</div>
         <div style={{ marginTop: 28, display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button type="button" className="mo-pill" style={{ flex: 1, minWidth: 140, height: 56 }} onClick={onClose}>Volver</button>
@@ -331,7 +349,7 @@ function RsvpSheet({ invitation, token, preview, labels, response, onSaved, onCl
         <h2 id="mo-rsvp-title" className="mo-serif" style={{ marginTop: 26, fontSize: 46, lineHeight: 1, letterSpacing: "-.02em" }}><StoryTitle text={invitation.name} /></h2>
         <p className="mo-text" style={{ marginTop: 12, fontSize: 13 }}>{invitation.seats} {invitation.seats === 1 ? "cupo reservado" : "cupos reservados"}.</p>
         <div style={{ marginTop: 26, display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-          <span className="mo-kicker" style={{ letterSpacing: ".28em" }}>¿Quién nos acompaña?</span>
+          <span className="mo-kicker" style={{ letterSpacing: ".28em" }}>{t.who}</span>
           {invitation.seats > 1 && <button type="button" className="mo-kicker" style={{ letterSpacing: ".2em", textDecoration: "underline", textUnderlineOffset: 5, padding: "4px 0" }} onClick={() => { setDraft(draft.map(() => true)); setError(""); }}>Todos asistirán</button>}
         </div>
         <div style={{ marginTop: 10 }}>
@@ -347,7 +365,7 @@ function RsvpSheet({ invitation, token, preview, labels, response, onSaved, onCl
           <textarea rows={2} maxLength={1000} value={dietary} onChange={e => setDietary(e.target.value)} placeholder={invitation.seats === 1 ? "¿Alguna restricción?" : "Indica a quién corresponde cada una…"} />
         </label>}
         <label className="mo-field">Un mensaje para nosotros <span style={{ color: "var(--muted)" }}>· opcional</span>
-          <textarea rows={3} maxLength={2000} value={message} onChange={e => setMessage(e.target.value)} placeholder="Escríbanos unas palabras…" />
+          <textarea rows={3} maxLength={2000} value={message} onChange={e => setMessage(e.target.value)} placeholder={t.note} />
         </label>
         {error && <p role="alert" className="mo-error">{error}</p>}
         <button type="button" className="mo-pill" style={{ marginTop: 26 }} disabled={pending} onClick={submit}>{pending ? "Enviando…" : "Enviar confirmación"}</button>
