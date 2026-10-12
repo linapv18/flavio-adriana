@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Instrument_Serif, Jost } from "next/font/google";
 import "./globals.css";
 import PageMotion from "@/components/PageMotion";
+import { siteUrl } from "@/lib/site-url.mjs";
 import WeddingMusic from "@/components/WeddingMusic";
 
 
@@ -11,7 +12,7 @@ const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin"], w
 const sans = Jost({ variable: "--font-sans", subsets: ["latin"], weight: ["300", "400", "500"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(w.site.url),
+  metadataBase: new URL(siteUrl(w.site.url)),
   title: coupleNames,
   description: w.site.description,
   openGraph: { type: "website", locale: w.site.locale.replace("-", "_"), title: coupleNames, description: w.site.description, images: [{ url: w.assets.social, alt: coupleNames }] },

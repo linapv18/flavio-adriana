@@ -10,6 +10,7 @@ import { monogram } from "@/lib/moderna";
 import { login } from "./actions";
 import type { GuestRow } from "@/lib/guest-rows";
 import { invitationUrl } from "@/lib/invitation-links.mjs";
+import { siteUrl } from "@/lib/site-url.mjs";
 const loginErrors: Record<string, string> = {
   "1": "No pudimos iniciar sesión. Revisa la clave.",
   limited: "Demasiados intentos fallidos. Espera 15 minutos e intenta de nuevo.",
@@ -41,7 +42,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
   try {
     const sql = neon(weddingDatabaseUrl());
     const records = await sql`SELECT i.token_hash, i.id, i.display_name AS name, i.seats, i.sent_at IS NOT NULL AS sent, r.attending, r.party_size AS "partySize", r.dietary_requirements AS dietary, r.message, r.updated_at AS updated FROM invitations i LEFT JOIN invitation_responses r ON r.invitation_id=i.id WHERE i.active=true ORDER BY i.display_name` ;
-    rows = records.map(({ token_hash, ...row }) => ({ ...row, invitationUrl: invitationUrl(w.site.url, token_hash) })) as GuestRow[];
+    rows = records.map(({ token_hash, ...row }) => ({ ...row, invitationUrl: invitationUrl(siteUrl(w.site.url), token_hash) })) as GuestRow[];
   } catch {
     return <main className="mo mo-dark mo-login"><div>
       <p className="mo-login-mono">{monogram.a}&amp;{monogram.b}</p>
