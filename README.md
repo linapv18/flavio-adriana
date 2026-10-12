@@ -42,6 +42,13 @@ Local paths start with `/` and resolve from `public/`; keep images local unless 
 5. Follow `db/README.md` to opt into the new database, initialize the unchanged schema, and create invitations. Set a unique admin password.
 6. Verify a test invitation, RSVP create/update, guest editing/revocation, dashboard counts and CSV on that new database before publishing.
 
+## Production: Flavio & Adriana
+
+- **Hosting:** Vercel project `flavio-adriana` (team "lmpere21asuedu's projects"), deployed from `main` on GitHub `linapv18/flavio-adriana`. Every push to `main` redeploys.
+- **Database:** Neon project `flavio-adriana` (`ancient-hall-37332785`, AWS US East 1, branch `production`, database `neondb`). Tables were created from `db/invitations.sql` in the Neon SQL Editor; rerun that file there after schema changes (every statement is idempotent).
+- **Environment variables (Vercel, Production):** `WEDDING_DATABASE_ENABLED=true`, `WEDDING_DATABASE_URL` (Neon pooled connection string, secret) and `WEDDING_REPORT_PASSWORD` (couple's panel password, secret). Optional `WEDDING_SITE_URL` for a custom domain; otherwise guest links use the Vercel production domain.
+- **Couple's panel:** `/organizacion` on the production domain. It is not linked from the invitation; share it with the couple directly.
+
 ## Verification
 
 ```sh
