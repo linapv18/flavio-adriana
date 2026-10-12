@@ -42,6 +42,8 @@
 .mo-pill:disabled { opacity: .5; transform: none; }
 .mo-underline { font: 400 10px var(--sans); letter-spacing: .24em; text-transform: uppercase; border-bottom: 1px solid currentColor; padding-bottom: 3px; }
 
+.mo-arrow { display: inline-block; width: .9em; height: .9em; margin-left: .25em; vertical-align: -.05em; }
+
 /* Envelope (gatefold) */
 .mo-env { position: absolute; inset: 0; z-index: 20; perspective: 2000px; }
 .mo-env.is-busy { pointer-events: none; }
@@ -95,7 +97,7 @@
 .mo-bar { position: absolute; z-index: 5; top: 0; left: 0; right: 0; height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
 .mo-bar > * { pointer-events: auto; }
 /* Long chapters scroll under the bar, so it gets the page colour there. */
-.mo[data-chapter="viaje"] .mo-bar, .mo[data-chapter="preguntas"] .mo-bar { background: linear-gradient(var(--ivory) 75%, #F4F0E800); }
+.mo[data-chapter="el-dia"] .mo-bar, .mo[data-chapter="viaje"] .mo-bar, .mo[data-chapter="preguntas"] .mo-bar { background: linear-gradient(var(--ivory) 75%, #F4F0E800); }
 .mo-bar-brand { font: 400 22px var(--serif); }
 .mo-bar nav { display: none; gap: 26px; white-space: nowrap; }
 .mo-bar nav button { padding: 4px 0; font: 400 10px var(--sans); letter-spacing: .24em; text-transform: uppercase; opacity: .6; border-bottom: 1px solid transparent; }
@@ -104,13 +106,15 @@
 .mo-ticks button { width: 28px; height: 10px; display: flex; justify-content: flex-end; align-items: center; }
 .mo-ticks span { display: block; height: 1px; width: 12px; background: currentColor; opacity: .45; transition: width .4s, opacity .4s; }
 .mo-ticks button[aria-current="true"] span { width: 28px; opacity: 1; }
-/* Proximity, not mandatory: chapters taller than the screen (Viaje, Preguntas) must scroll freely. */
-.mo-scroller { position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y proximity; scroll-behavior: smooth; }
+/* Every chapter is exactly one screen and snaps strictly (Safari on iOS stops between chapters
+   with looser snapping); chapters with more content scroll inside their own screen. */
+.mo-scroller { position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
 .mo-ch { position: relative; height: 100%; scroll-snap-align: start; overflow: hidden; padding: 96px 24px 48px; display: flex; flex-direction: column; }
 .mo-ch.is-dark { background: var(--ink); color: var(--ivory); }
 .mo-ch.is-sand { background: var(--sand); }
-.mo-ch.is-grow { height: auto; min-height: 100%; overflow: visible; }
-.mo-ch.is-tall { height: auto; min-height: 100%; overflow: visible; padding-bottom: 40px; }
+.mo-ch.is-grow, .mo-ch.is-tall { overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: none; }
+.mo-ch.is-grow::-webkit-scrollbar, .mo-ch.is-tall::-webkit-scrollbar { display: none; }
+.mo-ch.is-tall { padding-bottom: 40px; }
 .mo-ch .mo-kicker { color: var(--muted); }
 .mo-ch.is-dark .mo-kicker { color: var(--stone); }
 

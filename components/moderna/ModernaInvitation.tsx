@@ -168,11 +168,11 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
             <div style={{ marginTop: "auto" }}>
               <div className="mo-row">
                 <span className="mo-row-time">{w.date.time}</span>
-                <div><p className="mo-row-title">Ceremonia</p><p className="mo-row-text">{w.venues.ceremony.name}<br />{w.venues.ceremony.address}</p><a className="mo-underline" href={w.venues.ceremony.mapUrl} target="_blank" rel="noopener noreferrer">Cómo llegar ↗</a></div>
+                <div><p className="mo-row-title">Ceremonia</p><p className="mo-row-text">{w.venues.ceremony.name}<br />{w.venues.ceremony.address}</p><a className="mo-underline" href={w.venues.ceremony.mapUrl} target="_blank" rel="noopener noreferrer">Cómo llegar <ExternalArrow /></a></div>
               </div>
               <div className="mo-row">
                 <span className="mo-row-key">Después</span>
-                <div><p className="mo-row-title">Recepción</p><p className="mo-row-text">{w.venues.reception.name}<br />{w.venues.reception.address}</p><a className="mo-underline" href={w.venues.reception.mapUrl} target="_blank" rel="noopener noreferrer">Cómo llegar ↗</a></div>
+                <div><p className="mo-row-title">Recepción</p><p className="mo-row-text">{w.venues.reception.name}<br />{w.venues.reception.address}</p><a className="mo-underline" href={w.venues.reception.mapUrl} target="_blank" rel="noopener noreferrer">Cómo llegar <ExternalArrow /></a></div>
               </div>
               {/* The dress code opens in place, so guests keep their spot in the invitation. */}
               <div className={`mo-dress ${dressOpen ? "is-open" : ""}`}>
@@ -182,7 +182,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
                 {dressOpen && <div id="mo-dress" className="mo-dress-body">
                   <p>{w.dressCode.description}</p>
                   {w.dressCode.reservedColors && <><p className="mo-label" style={{ marginTop: 16, color: "var(--muted)" }}>Colores reservados</p><p>{w.dressCode.reservedColors}</p></>}
-                  {w.dressCode.links.some(l => realUrl(l.url)) && <p className="mo-dress-links">{w.dressCode.links.filter(l => realUrl(l.url)).map(l => <a key={l.url} className="mo-underline" href={l.url} target="_blank" rel="noopener noreferrer">{l.label} ↗</a>)}</p>}
+                  {w.dressCode.links.some(l => realUrl(l.url)) && <p className="mo-dress-links">{w.dressCode.links.filter(l => realUrl(l.url)).map(l => <a key={l.url} className="mo-underline" href={l.url} target="_blank" rel="noopener noreferrer">{l.label} <ExternalArrow /></a>)}</p>}
                 </div>}
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
                 <span><span className="mo-label" style={{ display: "block", color: "var(--muted)" }}>{f.group}</span><span className="mo-faq-q">{f.q}</span></span>
                 <span className="mo-faq-plus" aria-hidden="true">+</span>
               </button>
-              {faqOpen === i && <p className="mo-faq-a">{f.a}{f.links.length > 0 && <><br />{f.links.map(l => <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer">{l.label} ↗</a>)}</>}</p>}
+              {faqOpen === i && <p className="mo-faq-a">{f.a}{f.links.length > 0 && <><br />{f.links.map(l => <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer">{l.label} <ExternalArrow /></a>)}</>}</p>}
             </div>)}
             {lastChapter === "preguntas" && footer}
           </section>}
@@ -232,7 +232,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
               <p className="mo-label" style={{ color: "var(--muted)", marginBottom: 6 }}>{w.hotel.title}</p>
               <div className="mo-row">
                 <span className="mo-row-key">Hotel</span>
-                <div><p className="mo-row-title">{w.hotel.name}</p><p className="mo-row-text">{w.hotel.description}</p>{realUrl(w.hotel.mapUrl) ? <a className="mo-underline" href={w.hotel.mapUrl} target="_blank" rel="noopener noreferrer">{w.hotel.address} ↗</a> : <p className="mo-row-text">{w.hotel.address}</p>}</div>
+                <div><p className="mo-row-title">{w.hotel.name}</p><p className="mo-row-text">{w.hotel.description}</p>{realUrl(w.hotel.mapUrl) ? <a className="mo-underline" href={w.hotel.mapUrl} target="_blank" rel="noopener noreferrer">{w.hotel.address} <ExternalArrow /></a> : <p className="mo-row-text">{w.hotel.address}</p>}</div>
               </div>
               <div className="mo-row">
                 <span className="mo-row-key">Código</span>
@@ -255,7 +255,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
                 </button>
                 {guideOpen === i && <div className="mo-guide">
                   {g.note && <p className="mo-guide-note">{g.note}</p>}
-                  <ul>{g.items.map((item, j) => <li key={j}>{realUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name} ↗</a> : <span>{item.name}</span>}<p>{item.description}</p></li>)}</ul>
+                  <ul>{g.items.map((item, j) => <li key={j}>{realUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name} <ExternalArrow /></a> : <span>{item.name}</span>}<p>{item.description}</p></li>)}</ul>
                 </div>}
               </div>)}
               <div style={{ borderTop: "1px solid var(--line)" }} />
@@ -292,6 +292,11 @@ function PhotoViewer({ photos, index, onChange, onClose }: { photos: string[]; i
       <button type="button" className="mo-viewer-btn is-next" onClick={() => step(1)} aria-label="Foto siguiente">›</button>
     </>}
   </div>;
+}
+
+// A drawn arrow: iOS renders the "↗" character as a blue emoji.
+function ExternalArrow() {
+  return <svg className="mo-arrow" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
 function StoryTitle({ text }: { text: string }) {
