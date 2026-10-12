@@ -70,7 +70,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
   }
   const goChapter = (i: number) => scroller.current?.scrollTo({ top: sectionTop(scroller.current, i), behavior: "smooth" });
   const cd = countdown(now);
-  const [seamLeft, seamRight] = seamName(invitation?.name);
+  const seam = seamName(invitation?.name);
   const current = CHAPTERS[chapter];
   // Closing links sit at the end of whichever chapter comes last.
   const lastChapter = CHAPTERS[CHAPTERS.length - 1].id;
@@ -94,7 +94,9 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
             <p className="mo-kicker">Una invitación para un día inolvidable</p>
             <p className="mo-env-mono">{monogram.a}<em>&amp;</em>{monogram.b}</p>
           </div>
-          <div className="mo-env-name"><span>{seamLeft}</span><span>{seamRight}</span></div>
+          {typeof seam === "string"
+            ? <p className="mo-env-name is-whole">{seam}</p>
+            : <div className="mo-env-name"><span>{seam[0]}</span><span>{seam[1]}</span></div>}
         </div>
       </div>)}
       <button type="button" className="mo-seal" onClick={openInvitation} aria-label="Abrir la invitación"><span>&amp;</span></button>

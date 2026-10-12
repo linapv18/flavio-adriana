@@ -62,6 +62,7 @@
 .mo-env-name { position: absolute; bottom: 24%; left: 0; right: 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); column-gap: .45em; font: italic 400 24px/1 var(--serif); }
 /* The name reads as one line split by the seam; the gap only clears the seam itself. */
 .mo-env-name span:first-child { text-align: right; }
+.mo-env-name.is-whole { display: block; padding: 0 24px; text-align: center; }
 .mo-seal { position: absolute; left: 50%; top: 50%; width: 68px; height: 68px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFDF8, var(--sand) 70%); color: var(--ink); display: flex; align-items: center; justify-content: center; translate: -50% -50%; box-shadow: 0 10px 30px #0B090880; animation: mPulseL 2.4s ease-out infinite; transition: scale .4s var(--ease), opacity .35s; }
 .mo-seal::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; border: 1px solid #17131140; }
 .mo-seal span { font: italic 400 32px/1 var(--serif); }

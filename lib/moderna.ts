@@ -28,10 +28,19 @@ export const dayHeading = long ? { first: `${capitalize(long.weekday)},`, second
 export const monogram = (() => { const [a = "", b = ""] = w.couple.initials.split("&").map(s => s.trim()); return { a, b }; })();
 
 // Splits an addressee across the envelope's seam: "Para Familia" | "Rodríguez".
-export function seamName(name: string | undefined) {
+// Cuts at the word gap that leaves both halves closest in length, so the line stays centred on the seam.
+// When no gap is close enough to the middle (e.g. "Para | Valentina Ruiz"), returns the whole line
+// instead, to be drawn centred across both panels like the monogram.
+export function seamName(name: string | undefined): [string, string] | string {
   const words = `Para ${name ?? "nuestros seres queridos"}`.trim().split(/\s+/);
-  const cut = Math.ceil(words.length / 2);
-  return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+  const halves = (cut: number) => [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+  let best = 1;
+  for (let cut = 2; cut < words.length; cut++) {
+    const [a, b] = halves(cut), [c, d] = halves(best);
+    if (Math.abs(a.length - b.length) < Math.abs(c.length - d.length)) best = cut;
+  }
+  const [a, b] = halves(best);
+  return Math.abs(a.length - b.length) <= 4 ? [a, b] : words.join(" ");
 }
 
 // Each seat shows its guest's name; invitations saved before names existed fall back to "Persona N".
