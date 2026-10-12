@@ -46,14 +46,14 @@ export async function saveInvitation(raw: InvitationInput) {
   if (!(await reportAuthorized())) return { error: "Tu sesión venció. Vuelve a iniciar sesión." };
   const parsed = parseInvitationInput(raw);
   if ("error" in parsed) return { error: parsed.error };
-  const input = parsed.value, { name, response } = input;
+  const input = parsed.value, { name, response, guestNames } = input;
   try {
     const sql = neon(weddingDatabaseUrl());
     if (input.id && response === null) {
       // A missing response is the existing representation of a pending invitation.
       // Update the invitation and clear its response atomically.
       const updated = await sql`WITH edited AS (
-        UPDATE invitations SET display_name=${name}, seats=${input.seats}
+        UPDATE invitations SET display_name=${name}, seats=${input.seats}, guest_names=${guestNames}::text[]
         WHERE id=${input.id} AND active=true RETURNING id
       ), cleared AS (
         DELETE FROM invitation_responses WHERE invitation_id IN (SELECT id FROM edited)
@@ -62,26 +62,27 @@ export async function saveInvitation(raw: InvitationInput) {
       if (!updated.length) return { error: "La invitación ya no está disponible." };
     } else if (input.id && response) {
       const updated = await sql`WITH edited AS (
-        UPDATE invitations SET display_name=${name}, seats=${input.seats}
+        UPDATE invitations SET display_name=${name}, seats=${input.seats}, guest_names=${guestNames}::text[]
         WHERE id=${input.id} AND active=true RETURNING id
-      ) INSERT INTO invitation_responses(invitation_id,attending,party_size)
-        SELECT id,${response.attending},${response.partySize} FROM edited
-        ON CONFLICT(invitation_id) DO UPDATE SET attending=EXCLUDED.attending,party_size=EXCLUDED.party_size,
+      ) INSERT INTO invitation_responses(invitation_id,attending,party_size,attendance)
+        SELECT id,${response.attending},${response.partySize},${response.attendance}::boolean[] FROM edited
+        ON CONFLICT(invitation_id) DO UPDATE SET attending=EXCLUDED.attending,party_size=EXCLUDED.party_size,attendance=EXCLUDED.attendance,
         dietary_requirements=CASE WHEN EXCLUDED.attending THEN invitation_responses.dietary_requirements ELSE '' END,updated_at=now()
         RETURNING invitation_id`;
       if (!updated.length) return { error: "La invitación ya no está disponible." };
     } else if (input.id) {
-      const updated = await sql`UPDATE invitations i SET display_name=${name}, seats=${input.seats}
+      // Answers are stored per seat, so changing the seats of an answered invitation needs new answers.
+      const updated = await sql`UPDATE invitations i SET display_name=${name}, seats=${input.seats}, guest_names=${guestNames}::text[]
         WHERE i.id=${input.id} AND i.active=true AND NOT EXISTS (
-          SELECT 1 FROM invitation_responses r WHERE r.invitation_id=i.id AND r.party_size > ${input.seats}
+          SELECT 1 FROM invitation_responses r WHERE r.invitation_id=i.id AND i.seats <> ${input.seats}
         ) RETURNING id`;
-      if (!updated.length) return { error: "No se pudo guardar: la invitación no está disponible o tiene más personas confirmadas que los cupos indicados." };
+      if (!updated.length) return { error: "No se pudo guardar: la invitación no está disponible o, al cambiar los cupos, falta indicar de nuevo quién asistirá." };
     } else {
       const hash = createHash("sha256").update(randomBytes(32)).digest("hex");
       // A retry with the same requestId (e.g. after a lost response) applies the latest name and seats.
-      await sql`INSERT INTO invitations(id,source_key,display_name,seats,token_hash)
-        VALUES(${input.requestId},${"panel-" + input.requestId},${name},${input.seats},${hash})
-        ON CONFLICT(id) DO UPDATE SET display_name=EXCLUDED.display_name, seats=EXCLUDED.seats
+      await sql`INSERT INTO invitations(id,source_key,display_name,seats,guest_names,token_hash)
+        VALUES(${input.requestId},${"panel-" + input.requestId},${name},${input.seats},${guestNames}::text[],${hash})
+        ON CONFLICT(id) DO UPDATE SET display_name=EXCLUDED.display_name, seats=EXCLUDED.seats, guest_names=EXCLUDED.guest_names
         WHERE invitations.source_key=EXCLUDED.source_key AND invitations.active=true`;
     }
     revalidatePath("/organizacion");

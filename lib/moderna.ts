@@ -34,10 +34,14 @@ export function seamName(name: string | undefined) {
   return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
 }
 
-// The database stores seats and a confirmed count per invitation, not names, so seats are numbered.
-export const seatLabels = (name: string, seats: number) => Array.from({ length: seats }, (_, i) => seats === 1 ? name : `Persona ${i + 1}`);
-export const seatAnswers = (seats: number, response: { attending: boolean; partySize: number } | null) =>
-  Array.from({ length: seats }, (_, i) => response ? response.attending && i < response.partySize : null);
+// Each seat shows its guest's name; invitations saved before names existed fall back to "Persona N".
+export const seatLabels = (name: string, seats: number, guestNames: string[] = []) =>
+  Array.from({ length: seats }, (_, i) => guestNames[i] || (seats === 1 ? name : `Persona ${i + 1}`));
+// Per-person answers; older responses only stored a count, so the first N seats count as attending.
+export const seatAnswers = (seats: number, response: { attending: boolean; partySize: number; attendance?: boolean[] | null } | null) =>
+  Array.from({ length: seats }, (_, i) => !response ? null
+    : response.attendance?.length === seats ? response.attendance[i]
+    : response.attending && i < response.partySize);
 
 export function countdown(now: number | null) {
   if (now === null || !Number.isFinite(weddingTime)) return null;

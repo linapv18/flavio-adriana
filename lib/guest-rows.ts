@@ -1,4 +1,4 @@
-export type GuestRow = { id: string; invitationUrl: string; name: string; seats: number; attending: boolean | null; partySize: number | null; dietary: string | null; message: string | null; updated: string | null; sent: boolean };
+export type GuestRow = { id: string; invitationUrl: string; name: string; seats: number; attending: boolean | null; partySize: number | null; dietary: string | null; message: string | null; updated: string | null; sent: boolean; guestNames: string[]; attendance: boolean[] | null };
 
 export const guestStatus = (row: Pick<GuestRow, "attending">) => row.attending === null ? "Sin respuesta" : row.attending ? "Asistirán" : "No asistirán";
 

@@ -41,7 +41,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
   let rows: GuestRow[];
   try {
     const sql = neon(weddingDatabaseUrl());
-    const records = await sql`SELECT i.token_hash, i.id, i.display_name AS name, i.seats, i.sent_at IS NOT NULL AS sent, r.attending, r.party_size AS "partySize", r.dietary_requirements AS dietary, r.message, r.updated_at AS updated FROM invitations i LEFT JOIN invitation_responses r ON r.invitation_id=i.id WHERE i.active=true ORDER BY i.display_name` ;
+    const records = await sql`SELECT i.token_hash, i.id, i.display_name AS name, i.seats, i.sent_at IS NOT NULL AS sent, i.guest_names AS "guestNames", r.attending, r.party_size AS "partySize", r.attendance, r.dietary_requirements AS dietary, r.message, r.updated_at AS updated FROM invitations i LEFT JOIN invitation_responses r ON r.invitation_id=i.id WHERE i.active=true ORDER BY i.display_name` ;
     rows = records.map(({ token_hash, ...row }) => ({ ...row, invitationUrl: invitationUrl(siteUrl(w.site.url), token_hash) })) as GuestRow[];
   } catch {
     return <main className="mo mo-dark mo-login"><div>

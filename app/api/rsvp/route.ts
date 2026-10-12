@@ -28,11 +28,13 @@ export async function POST(request: Request) {
     catch (e) { return reply({ error: e instanceof Error ? e.message : "Revisa tus datos." }, 400); }
     const sql = neon(weddingDatabaseUrl());
     // Validate the current allocation again inside the write, ignoring all client identity fields.
-    const rows = await sql`INSERT INTO invitation_responses (invitation_id, attending, party_size, dietary_requirements, message)
-      SELECT id, ${input.attending}, ${input.partySize}, ${input.dietary}, ${input.message}
+    // Per-person answers must still match the seat count if the couple changed it meanwhile.
+    const rows = await sql`INSERT INTO invitation_responses (invitation_id, attending, party_size, attendance, dietary_requirements, message)
+      SELECT id, ${input.attending}, ${input.partySize}, ${input.attendance}::boolean[], ${input.dietary}, ${input.message}
       FROM invitations WHERE id=${invitation.id} AND active=true AND seats >= ${input.partySize}
+        AND (${input.attendance}::boolean[] IS NULL OR cardinality(${input.attendance}::boolean[]) = seats)
       ON CONFLICT (invitation_id) DO UPDATE SET attending=EXCLUDED.attending,
-      party_size=EXCLUDED.party_size, dietary_requirements=EXCLUDED.dietary_requirements,
+      party_size=EXCLUDED.party_size, attendance=EXCLUDED.attendance, dietary_requirements=EXCLUDED.dietary_requirements,
       message=EXCLUDED.message, updated_at=now() RETURNING invitation_id`;
     if (!rows.length) return reply({ error: "La invitación cambió. Recarga la página para confirmar tus cupos." }, 409);
     return reply({ success: true });

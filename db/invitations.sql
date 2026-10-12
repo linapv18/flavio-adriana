@@ -22,3 +22,5 @@ CREATE TABLE IF NOT EXISTS report_login_failures (
 );
 CREATE INDEX IF NOT EXISTS report_login_failures_client_idx ON report_login_failures (client_hash, attempted_at);
 ALTER TABLE invitations ADD COLUMN IF NOT EXISTS sent_at timestamptz;
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS guest_names text[] NOT NULL DEFAULT '{}';
+ALTER TABLE invitation_responses ADD COLUMN IF NOT EXISTS attendance boolean[];

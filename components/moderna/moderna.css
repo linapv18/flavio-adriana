@@ -318,6 +318,17 @@ button.mo-story-photo { display: block; width: 100%; cursor: zoom-in; }
 .mo-stepper output { min-width: 34px; text-align: center; font: 400 26px var(--serif); }
 .mo-dark .mo-field textarea, .mo-dark .mo-field input { border-bottom-color: #F4F0E840; }
 .mo-dark .mo-sheet { background: var(--panel); color: var(--ivory); }
+.mo-guest-names { margin: 22px 0 0; padding: 0; border: 0; min-width: 0; }
+.mo-guest-names legend { padding: 0; margin-bottom: 4px; letter-spacing: .24em; }
+.mo-guest-names label { display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: baseline; gap: 8px; border-bottom: 1px solid #F4F0E826; }
+.mo-guest-names span { font-size: 10px; color: var(--stone); }
+.mo-guest-names input { width: 100%; border: 0; background: transparent; padding: 10px 0; font: italic 400 19px var(--serif); color: var(--ivory); outline: none; }
+.mo-guest-names label:focus-within { border-bottom-color: var(--ivory); }
+/* Sí/No switch on the dark panel */
+.mo-dark .mo-person { border-top-color: #F4F0E81A; }
+.mo-dark .mo-switch { border-color: #F4F0E840; }
+.mo-dark .mo-switch::before { background: var(--ivory); }
+.mo-dark .mo-switch.is-yes button:first-child, .mo-dark .mo-switch.is-no button:last-child { color: var(--ink); }
 .mo-dark .mo-scrim { background: #0B090866; z-index: 40; }
 .mo-dark .mo-error { color: #E0A3A8; }
 .mo-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }

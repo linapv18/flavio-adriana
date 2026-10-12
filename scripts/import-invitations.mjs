@@ -9,7 +9,7 @@ import { neon } from '@neondatabase/serverless';
 const [sourcePath, manifestPath, outputPath] = process.argv.slice(2);
 if (!sourcePath || !manifestPath || !outputPath) throw new Error('Required: source.json manifest.json output.html and a separately configured wedding database');
 const input=JSON.parse(await readFile(sourcePath,'utf8'));
-if(new Set(input.map(x=>x.sourceKey)).size!==input.length || input.some(x=>typeof x.name!=='string' || !x.name.trim() || x.name.length>200 || !Number.isInteger(x.seats) || x.seats<1 || x.seats>20)) throw new Error('Invalid input');
+if(new Set(input.map(x=>x.sourceKey)).size!==input.length || input.some(x=>typeof x.name!=='string' || !x.name.trim() || x.name.length>200 || (x.guests!==undefined && (!Array.isArray(x.guests) || x.guests.length!==x.seats || x.guests.some(g=>typeof g!=='string' || !g.trim() || g.length>120))) || !Number.isInteger(x.seats) || x.seats<1 || x.seats>20)) throw new Error('Invalid input');
 let manifest=[];
 try { manifest=JSON.parse(await readFile(manifestPath,'utf8')); } catch(e) { if(e.code!=='ENOENT') throw e; }
 const sql=neon(weddingDatabaseUrl());
@@ -26,9 +26,10 @@ await mkdir(dirname(manifestPath),{recursive:true});
 // Keep tokens for invitations omitted from this input so they can be reimported later.
 const kept=manifest.filter(m=>!rows.some(x=>x.sourceKey===m.sourceKey));
 await writeFile(manifestPath,JSON.stringify([...kept,...rows],null,2),{mode:0o600}); await chmod(manifestPath,0o600);
-await sql.transaction(rows.map(x=>sql`INSERT INTO invitations(id,source_key,display_name,seats,token_hash)
- VALUES(${x.id},${x.sourceKey},${x.name},${x.seats},${hashToken(x.token)})
- ON CONFLICT(source_key) DO UPDATE SET display_name=EXCLUDED.display_name,seats=EXCLUDED.seats`));
+// `guests` (optional) lists one name per seat.
+await sql.transaction(rows.map(x=>sql`INSERT INTO invitations(id,source_key,display_name,seats,guest_names,token_hash)
+ VALUES(${x.id},${x.sourceKey},${x.name},${x.seats},${(x.guests??[]).map(g=>g.trim())}::text[],${hashToken(x.token)})
+ ON CONFLICT(source_key) DO UPDATE SET display_name=EXCLUDED.display_name,seats=EXCLUDED.seats,guest_names=EXCLUDED.guest_names`));
 const keys=rows.map(x=>x.sourceKey);
 const counts=await sql`SELECT count(*)::int AS invitations,sum(seats)::int AS seats FROM invitations WHERE source_key=ANY(${keys}::text[])`;
 if(counts[0].invitations!==rows.length || counts[0].seats!==rows.reduce((a,x)=>a+x.seats,0)) throw new Error('Import mismatch');

@@ -18,6 +18,9 @@ const dotClass = (r: GuestRow) => r.attending === null ? "" : r.attending ? "is-
 const cupos = (n: number) => `${n} ${n === 1 ? "cupo" : "cupos"}`;
 const message = (r: GuestRow) => invitationMessage(w.invitation.message, r, coupleNames);
 const normalize = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const rowResponse = (r: GuestRow) => r.attending === null ? null : { attending: r.attending, partySize: r.partySize ?? 0, attendance: r.attendance };
+// Keeps one entry per seat when the seat count changes.
+const resize = <T,>(list: T[], length: number, fill: T) => Array.from({ length }, (_, i) => i < list.length ? list[i] : fill);
 
 export default function ModernaOrganizer({ rows, loadedAt, preview = false }: { rows: GuestRow[]; loadedAt: string; preview?: boolean }) {
   const router = useRouter();
@@ -48,7 +51,7 @@ export default function ModernaOrganizer({ rows, loadedAt, preview = false }: { 
   const declinedPeople = rows.reduce((n, r) => n + (r.attending === null ? 0 : r.seats - (r.attending ? r.partySize ?? 0 : 0)), 0);
   const pct = (n: number) => `${totals.seats ? (n / totals.seats) * 100 : 0}%`;
   const byStatus = (s: Status) => rows.filter(r => guestStatus(r) === s).length;
-  const visible = rows.filter(r => (filter === "Todas" || guestStatus(r) === filter) && normalize(r.name).includes(normalize(search)));
+  const visible = rows.filter(r => (filter === "Todas" || guestStatus(r) === filter) && normalize([r.name, ...r.guestNames].join(" ")).includes(normalize(search)));
   const totalsText = `${rows.length} invitaciones · ${totals.seats} cupos asignados`;
   const sent = rows.filter(r => r.sent), pendingSend = rows.filter(r => !r.sent);
   const cd = countdown(useNow());
@@ -58,7 +61,10 @@ export default function ModernaOrganizer({ rows, loadedAt, preview = false }: { 
   function downloadCsv() {
     // Prevent spreadsheet programs from treating guest-provided text as formulas.
     const cell = (v: unknown) => { let s = String(v ?? ""); if (/^[\s]*[=+@-]/.test(s)) s = "'" + s; return '"' + s.replaceAll('"', '""') + '"'; };
-    const values = [["Invitación", "Estado", "Cupos asignados", "Personas confirmadas", "Restricciones alimentarias", "Mensaje", "Enviada", "Enlace de invitación"], ...visible.map(r => [r.name, guestStatus(r), r.seats, r.partySize ?? "", r.dietary, r.message, r.sent ? "Sí" : "No", r.invitationUrl])];
+    const values = [["Invitación", "Invitados", "Estado", "Cupos asignados", "Personas confirmadas", "Asisten", "Restricciones alimentarias", "Mensaje", "Enviada", "Enlace de invitación"], ...visible.map(r => {
+      const names = seatLabels(r.name, r.seats, r.guestNames), answers = seatAnswers(r.seats, rowResponse(r));
+      return [r.name, names.join(", "), guestStatus(r), r.seats, r.partySize ?? "", names.filter((_, i) => answers[i]).join(", "), r.dietary, r.message, r.sent ? "Sí" : "No", r.invitationUrl];
+    })];
     const url = URL.createObjectURL(new Blob(["﻿" + values.map(r => r.map(cell).join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = "confirmaciones-boda.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     say("CSV exportado");
@@ -109,7 +115,7 @@ export default function ModernaOrganizer({ rows, loadedAt, preview = false }: { 
               <div><p className="mo-kicker is-dim">{totalsText}</p><h1 className="mo-org-h1">Invitados</h1></div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" className="mo-outline-btn" onClick={() => { router.refresh(); say("Datos actualizados"); }}>Actualizar</button><button type="button" className="mo-outline-btn" onClick={downloadCsv}>Exportar CSV</button></div>
             </div>
-            <input className="mo-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar invitación…" aria-label="Buscar invitación" />
+            <input className="mo-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar invitación o invitado…" aria-label="Buscar invitación o invitado" />
             <div className="mo-chips mo-ns">{FILTERS.map(k => <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}>{k} <small>{k === "Todas" ? rows.length : byStatus(k)}</small></button>)}</div>
             <div style={{ marginTop: 18 }}>
               {visible.map(r => <button key={r.id} type="button" className="mo-guest-row" onClick={() => setSheet({ id: r.id, kind: "detail" })}>
@@ -134,7 +140,7 @@ export default function ModernaOrganizer({ rows, loadedAt, preview = false }: { 
                 </div>)}
                 {!rows.length && <p className="mo-serif is-dim" style={{ fontStyle: "italic", fontSize: 20 }}>Crea tu primera invitación para compartirla.</p>}
               </div>
-              <NewInvitation onCreate={(name, seats, requestId) => run(() => saveInvitation({ name, seats, requestId }), "Invitación creada")} />
+              <NewInvitation onCreate={(name, seats, guestNames, requestId) => run(() => saveInvitation({ name, seats, guestNames, requestId }), "Invitación creada")} />
             </div>
             <p className="is-dim" style={{ marginTop: 18, fontSize: 11, lineHeight: 1.6 }}>Copiar un mensaje no lo envía: compártelo por el medio que prefieras.</p>
           </>}
@@ -187,7 +193,7 @@ function DetailView({ row, onShare, onCopyLink, run, onRemoved }: { row: GuestRo
   const [editing, setEditing] = useState(false);
   const [confirm, setConfirm] = useState<"reset" | "delete" | null>(null);
   const [busy, setBusy] = useState(false);
-  const response = row.attending === null ? null : { attending: row.attending, partySize: row.partySize ?? 0 };
+  const response = rowResponse(row);
   const answers = seatAnswers(row.seats, response);
   const act = async (a: () => Promise<Result>, done: string) => { setBusy(true); const ok = await run(a, done); setBusy(false); return ok; };
 
@@ -195,7 +201,7 @@ function DetailView({ row, onShare, onCopyLink, run, onRemoved }: { row: GuestRo
   return <>
     <SheetTitle row={row} />
     <p className="mo-label is-dim" style={{ margin: "28px 0 4px" }}>Asistencia</p>
-    {seatLabels(row.name, row.seats).map((name, i) => <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderTop: "1px solid #F4F0E81A" }}><span className="mo-serif" style={{ fontSize: 20 }}>{name}</span><span className="mo-label" style={{ letterSpacing: ".2em", color: answers[i] === null ? "var(--stone)" : "var(--ivory)" }}>{answers[i] === null ? "Pendiente" : answers[i] ? "Asiste" : "No asiste"}</span></div>)}
+    {seatLabels(row.name, row.seats, row.guestNames).map((name, i) => <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderTop: "1px solid #F4F0E81A" }}><span className="mo-serif" style={{ fontSize: 20 }}>{name}</span><span className="mo-label" style={{ letterSpacing: ".2em", color: answers[i] === null ? "var(--stone)" : "var(--ivory)" }}>{answers[i] === null ? "Pendiente" : answers[i] ? "Asiste" : "No asiste"}</span></div>)}
     {row.dietary && <><p className="mo-label is-dim" style={{ margin: "26px 0 8px" }}>Restricciones alimentarias</p><p style={{ fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{row.dietary}</p></>}
     <p className="mo-label is-dim" style={{ margin: "26px 0 8px" }}>Mensaje</p>
     <p className="mo-serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, whiteSpace: "pre-wrap" }}>{row.message || "—"}</p>
@@ -213,7 +219,7 @@ function DetailView({ row, onShare, onCopyLink, run, onRemoved }: { row: GuestRo
       <p className="is-dim" style={{ marginTop: 8, fontSize: 12, lineHeight: 1.6 }}>{confirm === "reset" ? "Se quitarán la confirmación, las restricciones y el mensaje. El enlace sigue funcionando." : "Se quitará de la lista y de los totales, y su enlace dejará de funcionar. Su respuesta se conserva en el historial."}</p>
       <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <button type="button" className="mo-pill is-light is-small" disabled={busy} onClick={async () => {
-          if (confirm === "reset") { if (await act(() => saveInvitation({ id: row.id, name: row.name, seats: row.seats, requestId: crypto.randomUUID(), response: null }), "Respuesta borrada")) setConfirm(null); }
+          if (confirm === "reset") { if (await act(() => saveInvitation({ id: row.id, name: row.name, seats: row.seats, guestNames: row.guestNames, requestId: crypto.randomUUID(), response: null }), "Respuesta borrada")) setConfirm(null); }
           else if (await act(() => removeInvitation(row.id), "Invitación borrada")) onRemoved();
         }}>{busy ? "Guardando…" : "Sí, borrar"}</button>
         <button type="button" className="mo-pill is-outline is-small" onClick={() => setConfirm(null)}>Cancelar</button>
@@ -222,22 +228,44 @@ function DetailView({ row, onShare, onCopyLink, run, onRemoved }: { row: GuestRo
   </>;
 }
 
-function EditView({ row, busy, onCancel, onSave }: { row: GuestRow; busy: boolean; onCancel: () => void; onSave: (input: { name: string; seats: number; response?: { attending: boolean; partySize: number } | null }) => void }) {
-  const initial = row.attending === null ? "pending" : row.attending ? "yes" : "no";
+function EditView({ row, busy, onCancel, onSave }: { row: GuestRow; busy: boolean; onCancel: () => void; onSave: (input: { name: string; seats: number; guestNames: string[]; response?: { attendance: boolean[] } | null }) => void }) {
+  const initialAnswers = seatAnswers(row.seats, rowResponse(row));
+  const answered = row.attending !== null;
   const [name, setName] = useState(row.name);
   const [seats, setSeats] = useState(row.seats);
-  const [attendance, setAttendance] = useState(initial);
-  const [count, setCount] = useState(Math.max(1, row.partySize || row.seats));
-  const capped = Math.min(count, seats);
-  const changed = attendance !== initial || (attendance === "yes" && capped !== row.partySize);
-  return <form onSubmit={e => { e.preventDefault(); onSave({ name, seats, response: changed ? attendance === "pending" ? null : { attending: attendance === "yes", partySize: attendance === "yes" ? capped : 0 } : undefined }); }}>
+  const [names, setNames] = useState(() => resize(row.guestNames, row.seats, ""));
+  const [mode, setMode] = useState<"pending" | "answered">(answered ? "answered" : "pending");
+  const [answers, setAnswers] = useState<(boolean | null)[]>(initialAnswers);
+  const [error, setError] = useState("");
+  const changeSeats = (n: number) => { setSeats(n); setNames(list => resize(list, n, "")); setAnswers(list => resize(list, n, null)); setError(""); };
+  const sameAnswers = seats === row.seats && answers.every((a, i) => a === initialAnswers[i]);
+  function submit() {
+    if (names.some(g => !g.trim())) { setError("Escribe el nombre de cada invitado."); return; }
+    if (mode === "answered" && answers.some(a => a === null)) { setError("Indica si cada invitado asistirá."); return; }
+    // Unchanged answers keep the guest's dietary notes and message; clearing removes them.
+    const response = mode === "pending" ? (answered ? null : undefined) : answered && sameAnswers ? undefined : { attendance: answers as boolean[] };
+    onSave({ name, seats, guestNames: names, response });
+  }
+  const setAnswer = (i: number, value: boolean) => { setAnswers(answers.map((a, j) => j === i ? value : a)); setError(""); };
+  return <form onSubmit={e => { e.preventDefault(); submit(); }}>
     <h2 id="mo-sheet-title" className="mo-serif" style={{ marginTop: 22, fontSize: 36 }}>Editar invitación</h2>
-    <label className="mo-field">Nombre de la persona o familia<input required maxLength={200} value={name} onChange={e => setName(e.target.value)} /></label>
-    <div style={{ marginTop: 22, display: "flex", justifyContent: "space-between", alignItems: "center" }}><span className="mo-kicker is-dim" style={{ letterSpacing: ".24em" }}>Cupos</span><Stepper value={seats} min={1} max={20} onChange={setSeats} label="cupos" /></div>
-    <p className="mo-kicker is-dim" style={{ marginTop: 22, letterSpacing: ".24em" }}>Asistencia</p>
-    <div className="mo-seg">{([["pending", "Sin respuesta"], ["yes", "Asisten"], ["no", "No asisten"]] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={attendance === k} onClick={() => setAttendance(k)}>{label}</button>)}</div>
-    {attendance === "yes" && <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center" }}><span className="mo-kicker is-dim" style={{ letterSpacing: ".24em" }}>Personas confirmadas</span><Stepper value={capped} min={1} max={seats} onChange={setCount} label="personas confirmadas" /></div>}
-    <p className="is-dim" style={{ marginTop: 16, fontSize: 12, lineHeight: 1.6 }}>{attendance === "pending" && initial !== "pending" ? "Al guardar se quitará la respuesta anterior, incluidas sus restricciones y mensaje. El enlace se conserva." : "Se conservan el enlace, las restricciones alimentarias y el mensaje."}</p>
+    <label className="mo-field">Nombre de la invitación (persona o familia)<input required maxLength={200} value={name} onChange={e => setName(e.target.value)} /></label>
+    <div style={{ marginTop: 22, display: "flex", justifyContent: "space-between", alignItems: "center" }}><span className="mo-kicker is-dim" style={{ letterSpacing: ".24em" }}>Cupos</span><Stepper value={seats} min={1} max={20} onChange={changeSeats} label="cupos" /></div>
+    <GuestNameFields names={names} onChange={list => { setNames(list); setError(""); }} />
+    <p className="mo-kicker is-dim" style={{ marginTop: 24, letterSpacing: ".24em" }}>Asistencia</p>
+    <div className="mo-seg" style={{ gridTemplateColumns: "1fr 1fr" }}>{([["pending", "Sin respuesta"], ["answered", "Con respuesta"]] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={mode === k} onClick={() => { setMode(k); setError(""); }}>{label}</button>)}</div>
+    {mode === "answered" && <div style={{ marginTop: 12 }}>
+      {seats > 1 && <button type="button" className="mo-org-textbtn" style={{ textDecoration: "underline", textUnderlineOffset: 5 }} onClick={() => { setAnswers(answers.map(() => true)); setError(""); }}>Todos asistirán</button>}
+      {names.map((guest, i) => <div key={i} className="mo-person">
+        <span id={`mo-edit-seat-${i}`} style={{ fontSize: 19 }}>{guest.trim() || `Invitado ${i + 1}`}</span>
+        <div className={`mo-switch ${answers[i] === true ? "is-yes" : answers[i] === false ? "is-no" : ""}`} role="group" aria-labelledby={`mo-edit-seat-${i}`}>
+          <button type="button" aria-pressed={answers[i] === true} onClick={() => setAnswer(i, true)}>Sí</button>
+          <button type="button" aria-pressed={answers[i] === false} onClick={() => setAnswer(i, false)}>No</button>
+        </div>
+      </div>)}
+    </div>}
+    <p className="is-dim" style={{ marginTop: 16, fontSize: 12, lineHeight: 1.6 }}>{mode === "pending" && answered ? "Al guardar se quitará la respuesta anterior, incluidas sus restricciones y mensaje. El enlace se conserva." : mode === "answered" && answered && seats !== row.seats ? "Cambiaste los cupos: indica de nuevo quién asistirá." : "Se conservan el enlace, las restricciones alimentarias y el mensaje."}</p>
+    {error && <p role="alert" className="mo-error" style={{ fontSize: 12 }}>{error}</p>}
     <div style={{ marginTop: 22, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
       <button type="submit" className="mo-pill is-light is-small" disabled={busy || !name.trim()}>{busy ? "Guardando…" : "Guardar"}</button>
       <button type="button" className="mo-pill is-outline is-small" onClick={onCancel}>Cancelar</button>
@@ -245,22 +273,36 @@ function EditView({ row, busy, onCancel, onSave }: { row: GuestRow; busy: boolea
   </form>;
 }
 
-function NewInvitation({ onCreate }: { onCreate: (name: string, seats: number, requestId: string) => Promise<boolean> }) {
+function GuestNameFields({ names, onChange }: { names: string[]; onChange: (names: string[]) => void }) {
+  return <fieldset className="mo-guest-names">
+    <legend className="mo-kicker is-dim">Invitados</legend>
+    {names.map((guest, i) => <label key={i}>
+      <span aria-hidden="true">{i + 1}</span>
+      <input maxLength={120} value={guest} onChange={e => onChange(names.map((g, j) => j === i ? e.target.value : g))} placeholder="Nombre y apellido" aria-label={`Nombre del invitado ${i + 1}`} />
+    </label>)}
+  </fieldset>;
+}
+
+function NewInvitation({ onCreate }: { onCreate: (name: string, seats: number, guestNames: string[], requestId: string) => Promise<boolean> }) {
   const [name, setName] = useState("");
   const [seats, setSeats] = useState(2);
+  const [names, setNames] = useState(["", ""]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const changeSeats = (n: number) => { setSeats(n); setNames(list => resize(list, n, "")); setError(""); };
   return <form className="mo-card" onSubmit={async e => {
     e.preventDefault();
     if (!name.trim()) { setError("Escribe el nombre de la invitación."); return; }
+    if (names.some(g => !g.trim())) { setError("Escribe el nombre de cada invitado."); return; }
     setBusy(true);
-    if (await onCreate(name.trim(), seats, requestId)) { setName(""); setSeats(2); setRequestId(crypto.randomUUID()); }
+    if (await onCreate(name.trim(), seats, names.map(g => g.trim()), requestId)) { setName(""); setSeats(2); setNames(["", ""]); setRequestId(crypto.randomUUID()); }
     setBusy(false);
   }}>
     <p className="mo-serif" style={{ fontSize: 30 }}>Nueva invitación</p>
-    <input className="mo-search" style={{ marginTop: 18, padding: "10px 0" }} maxLength={200} value={name} onChange={e => { setName(e.target.value); setError(""); }} placeholder="Nombre o familia" aria-label="Nombre o familia" />
-    <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}><span className="mo-kicker is-dim" style={{ letterSpacing: ".24em" }}>Cupos</span><Stepper value={seats} min={1} max={20} onChange={setSeats} label="cupos" /></div>
+    <input className="mo-search" style={{ marginTop: 18, padding: "10px 0" }} maxLength={200} value={name} onChange={e => { setName(e.target.value); setError(""); }} placeholder="Nombre de la invitación" aria-label="Nombre de la invitación" />
+    <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}><span className="mo-kicker is-dim" style={{ letterSpacing: ".24em" }}>Cupos</span><Stepper value={seats} min={1} max={20} onChange={changeSeats} label="cupos" /></div>
+    <GuestNameFields names={names} onChange={list => { setNames(list); setError(""); }} />
     {error && <p role="alert" className="mo-error" style={{ fontSize: 12 }}>{error}</p>}
     <button type="submit" className="mo-pill is-light" style={{ marginTop: 24, height: 52, fontSize: 10 }} disabled={busy}>{busy ? "Creando…" : "Crear invitación"}</button>
   </form>;

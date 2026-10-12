@@ -82,7 +82,7 @@ export default function ModernaInvitation({ invitation, token, startOpen = false
   const yes = response?.attending ? response.partySize : 0;
   const answered = response !== null;
   const seats = invitation?.seats ?? 0;
-  const labels = invitation ? seatLabels(invitation.name, seats) : [];
+  const labels = invitation ? seatLabels(invitation.name, seats, invitation.guestNames) : [];
   const answers = seatAnswers(seats, response);
 
   return <div className={`mo ${w.photos.monochrome ? "is-mono" : ""}`} data-chapter={current.id}>
@@ -300,11 +300,11 @@ function RsvpSheet({ invitation, token, preview, labels, response, onSaved, onCl
     try {
       if (preview) await new Promise(resolve => setTimeout(resolve, 600));
       else {
-        const res = await fetch("/api/rsvp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, attending: yes > 0, partySize: yes, dietary: yes ? dietary : "", message }) });
+        const res = await fetch("/api/rsvp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, attending: yes > 0, partySize: yes, attendance: draft, dietary: yes ? dietary : "", message }) });
         const result = await res.json().catch(() => ({}));
         if (!res.ok || !result.success) throw new Error(result.error || "No pudimos guardar tu respuesta.");
       }
-      onSaved({ attending: yes > 0, partySize: yes, dietary: yes ? dietary.trim() : "", message: message.trim() });
+      onSaved({ attending: yes > 0, partySize: yes, attendance: draft as boolean[], dietary: yes ? dietary.trim() : "", message: message.trim() });
       setEditing(false);
     } catch (e) { setError(e instanceof Error ? e.message : "Revisa tu conexión e intenta nuevamente."); }
     finally { setPending(false); }
