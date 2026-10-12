@@ -1,0 +1,392 @@
+{
+  "couple": {
+    "bride": "Flavio",
+    "groom": "Adriana",
+    "initials": "F & A"
+  },
+  "site": {
+    "url": "http://localhost:3000",
+    "language": "es",
+    "locale": "es-CO",
+    "timeZone": "America/Bogota",
+    "description": "Todos los detalles de nuestra boda y confirmación de asistencia."
+  },
+  "date": {
+    "iso": "2027-06-12T16:00:00-05:00",
+    "label": "12 de junio de 2027",
+    "day": "12",
+    "monthYear": "Junio · 2027",
+    "time": "16:00",
+    "period": "",
+    "location": "Ciudad, país",
+    "rsvpDeadline": "la fecha límite de confirmación"
+  },
+  "theme": {
+    "background": "#F4F0E8",
+    "dark": "#171311",
+    "light": "#F4F0E8",
+    "accent": "#171311",
+    "light-accent": "#4A433D",
+    "detail-d5ddc7": "#A69D92",
+    "detail-a37e51": "#171311",
+    "detail-293c3520": "#17131120",
+    "detail-8a957e": "#A69D92",
+    "detail-0006": "#17131166",
+    "detail-293c3510": "#17131110",
+    "detail-f5f2ea40": "#F4F0E840",
+    "detail-c3cbaa": "#A69D92",
+    "detail-293c3525": "#17131125",
+    "detail-526550": "#A69D92",
+    "detail-485b4b": "#A69D92",
+    "detail-243b32": "#171311",
+    "detail-0b1b2450": "#17131150",
+    "detail-9a8b6b66": "#E6DFD266",
+    "detail-9a8b6b80": "#E6DFD280",
+    "detail-948263": "#E6DFD2",
+    "detail-8c967f": "#A69D92",
+    "detail-94826355": "#E6DFD255",
+    "detail-435a49": "#171311",
+    "detail-787d6e": "#171311",
+    "detail-f5f2ea88": "#F4F0E888",
+    "detail-0002": "#17131122",
+    "detail-f5f2ea35": "#F4F0E835",
+    "detail-f5f2ea25": "#F4F0E825",
+    "detail-293c3506": "#17131106",
+    "detail-52634e": "#A69D92",
+    "detail-243a32": "#171311",
+    "detail-cfcebb": "#E6DFD2",
+    "detail-071c2855": "#17131155",
+    "detail-e9e5d8": "#E6DFD2",
+    "detail-d9d4c4": "#E6DFD2",
+    "detail-eeeadd": "#F4F0E8",
+    "detail-ece8dc": "#F4F0E8",
+    "detail-d6d0bf": "#E6DFD2",
+    "detail-64745a": "#A69D92",
+    "detail-2b4437": "#171311",
+    "detail-96a184": "#A69D92",
+    "detail-15282055": "#17131155",
+    "detail-293c3533": "#17131133",
+    "detail-c5ccac": "#A69D92",
+    "detail-334639": "#171311",
+    "detail-b7aa8755": "#E6DFD255",
+    "detail-a9997366": "#E6DFD266",
+    "detail-f5f2ea55": "#F4F0E855"
+  },
+  "sections": [
+    {
+      "id": "hero",
+      "enabled": true
+    },
+    {
+      "id": "story",
+      "enabled": true
+    },
+    {
+      "id": "schedule",
+      "enabled": true
+    },
+    {
+      "id": "venues",
+      "enabled": true
+    },
+    {
+      "id": "quote",
+      "enabled": true
+    },
+    {
+      "id": "quickLinks",
+      "enabled": true
+    },
+    {
+      "id": "gifts",
+      "enabled": true
+    },
+    {
+      "id": "rsvp",
+      "enabled": true
+    }
+  ],
+  "pages": {
+    "story": true,
+    "travel": true,
+    "faqs": true
+  },
+  "navigation": [
+    {
+      "label": "Nuestra historia",
+      "href": "/nuestra-historia",
+      "page": "story"
+    },
+    {
+      "label": "Alojamiento",
+      "href": "/viaje-alojamiento",
+      "page": "travel"
+    },
+    {
+      "label": "Preguntas frecuentes",
+      "href": "/faqs",
+      "page": "faqs"
+    }
+  ],
+  "hero": {
+    "eyebrow": "Nos vamos a casar",
+    "caption": "El comienzo de siempre",
+    "linkLabel": "Nuestro gran día",
+    "slides": [
+      {
+        "src": "/images/hero/couple-1.jpg",
+        "alt": "Foto de pareja 1",
+        "blackAndWhite": true
+      },
+      {
+        "src": "/images/hero/couple-2.jpg",
+        "alt": "Foto de pareja 2",
+        "blackAndWhite": false
+      },
+      {
+        "src": "/images/hero/couple-3.jpg",
+        "alt": "Foto de pareja 3",
+        "blackAndWhite": true
+      },
+      {
+        "src": "/images/hero/couple-4.jpg",
+        "alt": "Foto de pareja 4",
+        "blackAndWhite": false
+      },
+      {
+        "src": "/images/hero/couple-5.jpg",
+        "alt": "Foto de pareja 5",
+        "blackAndWhite": true
+      },
+      {
+        "src": "/images/hero/couple-6.jpg",
+        "alt": "Foto de pareja 6",
+        "blackAndWhite": false
+      }
+    ],
+    "intervalMs": 4500
+  },
+  "venues": {
+    "ceremony": {
+      "name": "Lugar de la ceremonia",
+      "address": "Dirección de la ceremonia",
+      "mapUrl": "#",
+      "image": "/placeholders/ceremony.svg"
+    },
+    "reception": {
+      "name": "Lugar de la recepción",
+      "address": "Dirección de la recepción",
+      "mapUrl": "#"
+    }
+  },
+  "story": {
+    "title": "Nuestra historia",
+    "previewTitle": "Una historia escrita juntos.",
+    "preview": "Agrega una breve introducción a la historia de los novios.",
+    "paragraphs": [
+      "Cuenta cómo se conocieron los novios.",
+      "Comparte sus recuerdos favoritos juntos.",
+      "Describe la nueva etapa que están por comenzar."
+    ],
+    "photos": [
+      "/placeholders/story-1.svg",
+      "/placeholders/story-2.svg",
+      "/placeholders/story-3.svg",
+      "/placeholders/story-4.svg",
+      "/placeholders/story-5.svg"
+    ]
+  },
+  "dressCode": {
+    "title": "Código de vestimenta",
+    "description": "Agrega las recomendaciones de vestimenta para los invitados.",
+    "reservedColors": "Indica los colores reservados y otras recomendaciones de vestimenta.",
+    "links": [
+      {
+        "label": "Inspiración de vestuario 1",
+        "url": "#"
+      },
+      {
+        "label": "Inspiración de vestuario 2",
+        "url": "#"
+      }
+    ]
+  },
+  "faqs": [
+    {
+      "title": "Niños",
+      "items": [
+        {
+          "question": "Niños en la celebración",
+          "answer": "Indica si la celebración incluirá niños."
+        }
+      ]
+    },
+    {
+      "title": "Alimentación",
+      "items": [
+        {
+          "question": "Restricciones alimentarias",
+          "answer": "Agrega información sobre el menú y las opciones para necesidades alimentarias especiales."
+        },
+        {
+          "question": "Solicitudes especiales",
+          "answer": "Indica cómo comunicar cualquier solicitud especial."
+        }
+      ]
+    }
+  ],
+  "hotel": {
+    "enabled": true,
+    "title": "Alojamiento",
+    "name": "Nombre del hotel",
+    "description": "Agrega los alojamientos recomendados y la información para reservar.",
+    "bookingCode": "Código de reserva",
+    "bookingInstructions": "Indica cómo utilizar el código de reserva.",
+    "image": "/placeholders/hotel.svg",
+    "bookingUrl": "#",
+    "address": "Dirección del hotel",
+    "mapUrl": "#",
+    "details": [
+      {
+        "title": "Habitación estándar",
+        "lines": [
+          "Agrega los detalles de la habitación estándar."
+        ]
+      },
+      {
+        "title": "Suite",
+        "lines": [
+          "Agrega los detalles de la suite."
+        ]
+      },
+      {
+        "title": "Habitación superior",
+        "lines": [
+          "Agrega los detalles de la habitación superior."
+        ]
+      },
+      {
+        "title": "Huéspedes adicionales",
+        "lines": [
+          "Agrega las condiciones para huéspedes adicionales."
+        ]
+      },
+      {
+        "title": "Beneficios incluidos",
+        "lines": [
+          "Describe los beneficios incluidos."
+        ]
+      },
+      {
+        "title": "Entrada y salida",
+        "lines": [
+          "Indica los horarios de entrada y salida."
+        ]
+      },
+      {
+        "title": "Reservas",
+        "lines": [
+          "Agrega los datos de contacto para reservar."
+        ]
+      }
+    ]
+  },
+  "tourism": {
+    "enabled": true,
+    "title": "Turismo y actividades",
+    "image": "/placeholders/tourism.svg",
+    "groups": [
+      {
+        "id": "meal",
+        "title": "Restaurantes",
+        "note": "Agrega recomendaciones de la zona.",
+        "items": [
+          {
+            "name": "Nombre del restaurante",
+            "url": "#",
+            "description": "Agrega una descripción."
+          }
+        ]
+      },
+      {
+        "id": "culture",
+        "title": "Museos y cultura",
+        "note": "Agrega recomendaciones de la zona.",
+        "items": [
+          {
+            "name": "Lugar de interés cultural",
+            "url": "#",
+            "description": "Agrega una descripción."
+          }
+        ]
+      },
+      {
+        "id": "things",
+        "title": "Actividades para disfrutar",
+        "note": "Agrega recomendaciones de la zona.",
+        "items": [
+          {
+            "name": "Actividad local",
+            "url": "#",
+            "description": "Agrega una descripción."
+          }
+        ]
+      }
+    ]
+  },
+  "gifts": {
+    "label": "Información sobre regalos",
+    "title": "Su compañía es nuestro mejor regalo.",
+    "description": "Agrega las preferencias de los novios o la información de su lista de regalos.",
+    "url": "",
+    "linkLabel": "Lista de regalos"
+  },
+  "contact": {
+    "label": "Contacto",
+    "url": "#",
+    "description": "Agrega los datos de contacto para resolver las dudas de los invitados."
+  },
+  "quote": {
+    "text": "Agrega una frase especial o un mensaje de los novios.",
+    "author": "Autor de la frase"
+  },
+  "music": {
+    "enabled": false,
+    "src": "",
+    "title": "Música de la boda",
+    "playlistUrl": ""
+  },
+  "assets": {
+    "hero": "/placeholders/couple.svg",
+    "storyPreview": "/placeholders/story-preview.svg",
+    "travel": "/placeholders/travel.svg",
+    "rsvp": "/placeholders/rsvp.svg",
+    "social": "/placeholders/social.svg",
+    "rsvpVideo": "/videos/rsvp-background.mp4"
+  },
+  "invitation": {
+    "previewGuest": "Nombre del invitado",
+    "message": "¡Hola {firstName}! Con mucha ilusión queremos invitarte a celebrar nuestra boda.\n\nAquí te dejamos todos los detalles:\n{url}\n\nEsperamos que puedas acompañarnos.\n\n{couple}"
+  },
+  "photos": {
+    "monochrome": true,
+    "cover": "/images/moderna/abrazo.jpg",
+    "story": "/images/moderna/beso.jpg",
+    "chapters": {
+      "portada": "/images/moderna/beso.jpg",
+      "cuenta-atras": "/images/moderna/traje.jpg",
+      "el-dia": "/images/moderna/puente.jpg",
+      "confirmacion": "/images/moderna/foto-a.jpg",
+      "historia": "/images/moderna/beso.jpg",
+      "viaje": "/images/moderna/foto-d.jpg",
+      "preguntas": "/images/moderna/foto-b.jpg"
+    },
+    "storyThumbs": [
+      "/images/moderna/beso.jpg",
+      "/images/moderna/puente.jpg",
+      "/images/moderna/traje.jpg",
+      "/images/moderna/foto-c.jpg",
+      "/images/moderna/foto-d.jpg"
+    ]
+  }
+}
